@@ -1,0 +1,29 @@
+# Export GitHub Issues to JIRA-compatible CSV format
+
+This software communicates with Github's v3 API, to export
+the "Issues" from a project in to a format JIRA can import.
+
+The source is set up for both leiningen and Eclipse, as I sometimes
+use the latter.
+
+Note that comment import is broken in JIRA import 4.1.4, and works
+correctly starting with JIRA import 4.2.  As of June 2012, unfortunately
+the version deployed in JIRA OnDemand is 4.1.4.
+
+## Usage
+
+Use lein deps to download the dependencies.
+
+Edit config.clj with your project settings.
+
+Run the Clojure code, either in an IDE or via lein.
+
+Import the resulting JIRA.CSV file in to JIRA. A sample
+JIRA import configuration file is provided, the comment
+setting is required for comment import to work.
+
+## License
+
+Copyright (C) 2012 Kyle Cordes
+
+Distributed under the Eclipse Public License, the same as Clojure.

@@ -1,0 +1,19 @@
+{
+  "project.lead" : "YOUR JIRA USERNAME HERE",
+  "field.Date Modified" : "updated",
+  "field.Status" : "status",
+  "user.email.suffix" : "@example.com",
+  "field.Date Created" : "created",
+  "field.Summary" : "summary",
+  "field.Issue type" : "issuetype",
+  "field.Comments" : "comment",
+  "date.import.format" : "MM/dd/yy hh:mm:ss a",
+  "field.Description" : "description",
+  "date.fields" : "Date Created",
+  "field.Reporter" : "reporter",
+  "project.name" : "YOUR PROJECT NAME HERE",
+  "project.key" : "PROJ-KEY",
+  "mapfromcsv" : "false",
+  "field.Issue Id" : "issue-id",
+  "settings.advanced.mapper.comment" : "com.atlassian.jira.plugins.importer.imports.csv.mappers.PvcsComment"
+}
