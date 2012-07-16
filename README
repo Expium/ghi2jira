@@ -10,17 +10,37 @@ Note that comment import is broken in JIRA import 4.1.4, and works
 correctly starting with JIRA import 4.2.  As of June 2012, unfortunately
 the version deployed in JIRA OnDemand is 4.1.4.
 
+For background information, see the announcement blog post:
+
+http://kylecordes.com/2012/github-issues-export-jira
+
 ## Usage
 
-Use lein deps to download the dependencies.
+I expect some users of this tool to start without Clojure knowledge (i.e. just want to export JIRA data, not learn Clojure), so here are hopefully sufficient instructions for that.
 
-Edit config.clj with your project settings.
+Install Java.
 
-Run the Clojure code, either in an IDE or via lein.
+You don't need to install Clojure - Leiningen will do that for you.
 
-Import the resulting JIRA.CSV file in to JIRA. A sample
-JIRA import configuration file is provided, the comment
-setting is required for comment import to work.
+Install Leiningen:
+
+https://github.com/technomancy/leiningen/
+
+Either the new 2.x version, or old 1.x version, should work. (Typically you just download the lein script, and put it in your ~/bin directory.)
+
+Download ghijira (this software), either with "git clone" or by downloading a ZIP from Github.
+
+Navigate to its directory in your command prompt.
+
+Use "lein deps" to download the dependencies. Leiningen will download all of the various JAR files needed, including Clojure itself.
+
+Edit config.clj with your project settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics.
+
+Run the ghijira code, using Leiningen: "lein run". This will take a while, depending on the number of issues in your project, because the Github Issues API requires a separate requires for each Issue to download its comments.
+
+Import the resulting JIRA.csv file into JIRA. To get this right, you need to use a JIRA import configuration file. This ghijira project includes an example. Of particular importance is the comment setting, required for comment import to work. To clarify, this JIRA import configuration file is *not* part of the Clojure code, rather it is something JIRA needs.
+
+Information about such a file is linked in the blog post mentioned earlier.
 
 ## License
 

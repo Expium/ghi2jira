@@ -8,4 +8,5 @@
   :dev-dependencies [
         [lein-eclipse "1.0.0"]
   ]
+  :main ghijira.core
 )

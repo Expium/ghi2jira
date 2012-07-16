@@ -8,7 +8,7 @@
 
 (ns ghijira.core
   "Export GitHub Issues to JIRA-compatible CSV format"
-  (:require [clojure.pprint :as pp]
+  (:require [clojure.pprint :as pprint]
             [clojure.string :only replace]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
