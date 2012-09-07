@@ -93,5 +93,9 @@
       (repeat (- MAXCMT (count comments)) "")    ; pad out field count  
     )))
 
-(with-open [out-file (io/writer "JIRA.csv")]
-  (csv/write-csv out-file (concat [columns] (map issue2row issues))))
+(defn export-issues-to-file [filename]
+  (with-open [out-file (io/writer filename)]
+    (csv/write-csv out-file (concat [columns] (map issue2row issues)))))
+
+(defn -main [& args] 
+  (export-issues-to-file "JIRA.csv"))
