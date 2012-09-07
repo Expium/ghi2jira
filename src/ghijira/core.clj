@@ -94,8 +94,13 @@
     )))
 
 (defn export-issues-to-file [filename]
-  (with-open [out-file (io/writer filename)]
-    (csv/write-csv out-file (concat [columns] (map issue2row issues)))))
+  (let [issues-in-order (sort-by :number issues)]
+    (with-open [out-file (io/writer filename)]
+      (csv/write-csv 
+        out-file 
+        (concat
+          [columns] 
+          (map issue2row issues-in-order))))))
 
 (defn -main [& args] 
   (export-issues-to-file "JIRA.csv"))
