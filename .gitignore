@@ -6,6 +6,8 @@
 /.lein-failures
 /checkouts
 /.lein-deps-sum
-*.csv
+JIRA-*.csv
+JIRA.csv
 /config-OD
 *history*
+/target
