@@ -1,17 +1,18 @@
 ; Configuration setting for GHI -> JIRA CSV Export
 
-; Github login:
-(def auth "EMAIL:PASS")
+{
+ ; Github login:
+ :auth "EMAIL:PASS"
+ 
+ ; Project owner and name:
+ :ghuser "github-user-goes-here"
+ :ghproject "project-name-here"
 
-; Project owner and name:
-(def ghuser "github-user-goes-here")
-(def ghproject "project-name-here")
+ ; Maximum number of comments per issue
+ :maxcmt 25
 
-; Maximum number of comments per issue
-(def MAXCMT 25)
-
-; Translate user names from 
-(def user-map
-  { "GithubUserName1" "JIRAUserName1"
-    "GithubUserName2" "JIRAUserName2"
-   })
+ ; Translate user names from 
+ :user-map
+ { "GithubUserName1" "JIRAUserName1"
+  "GithubUserName2" "JIRAUserName2"}
+}
