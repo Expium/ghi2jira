@@ -1,26 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/cheshire-4.0.0.jar"/>
-	<classpathentry kind="lib" path="lib/clj-http-0.4.0.jar"/>
-	<classpathentry kind="lib" path="lib/clj-time-0.4.2.jar"/>
-	<classpathentry kind="lib" path="lib/clojure-1.4.0.jar"/>
-	<classpathentry kind="lib" path="lib/commons-codec-1.5.jar"/>
-	<classpathentry kind="lib" path="lib/commons-io-2.1.jar"/>
-	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
-	<classpathentry kind="lib" path="lib/core.incubator-0.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/data.csv-0.1.2.jar"/>
-	<classpathentry kind="lib" path="lib/dev"/>
-	<classpathentry kind="lib" path="lib/httpclient-4.1.3.jar"/>
-	<classpathentry kind="lib" path="lib/httpcore-4.1.4.jar"/>
-	<classpathentry kind="lib" path="lib/httpmime-4.1.3.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-core-2.0.0.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-dataformat-smile-2.0.0.jar"/>
-	<classpathentry kind="lib" path="lib/joda-time-2.1.jar"/>
-	<classpathentry kind="lib" path="lib/pathetic-0.4.0.jar"/>
-	<classpathentry kind="lib" path="lib/slingshot-0.10.2.jar"/>
-	<classpathentry kind="lib" path="lib/tentacles-0.2.0-beta1.jar"/>
-	<classpathentry kind="lib" path="lib/url-0.0.6.jar"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="dev-resources">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="resources">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="target/classes">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="ccw.LEININGEN_CONTAINER"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
