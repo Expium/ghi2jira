@@ -11,3 +11,4 @@ JIRA.csv
 /config-OD
 *history*
 /target
+config-*.clj

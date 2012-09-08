@@ -45,5 +45,6 @@
                 :user "anne"
                 :comment-contents []}
         issues [issue3 issue1 issue2]] ; random order
-    (export-issues-to-file issues "testdata/temp/out.csv")
-    (is (= (slurp "testdata/expected_jira.csv") (slurp"testdata/temp/out.csv")))))
+    (binding [*maxcmt* 25]
+      (export-issues-to-file issues "testdata/temp/out.csv")
+      (is (= (slurp "testdata/expected_jira.csv") (slurp"testdata/temp/out.csv"))))))

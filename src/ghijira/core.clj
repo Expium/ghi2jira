@@ -16,7 +16,14 @@
             [clj-time.core :as time]
             [clj-time.format :as tf] ))
 
-(load-file "config.clj")
+(def UNNAMED "UNNAMED")
+
+(def ^:dynamic *config-id*)
+(def ^:dynamic *ghuser*)
+(def ^:dynamic *ghproject*)
+(def ^:dynamic *auth*)
+(def ^:dynamic *maxcmt*)
+(def ^:dynamic *user-map*)
 
 ; Use the all-pages mechanism in tentacles to retrieve a complete list
 ; of issues. I found that several of the GH export scripts on the web
@@ -29,16 +36,17 @@
 ;; Loading issues from GH
 
 (defn get-issues [state]
-  (issues/issues ghuser ghproject {:auth auth :all-pages true :state state}))
+  (issues/issues *ghuser* *ghproject* {:auth *auth* :all-pages true :state state}))
 
 (defn get-open-issues [] (get-issues "open"))
 
 (defn get-closed-issues [] (get-issues "closed"))
 
-(defn get-all-issues [] (concat (get-open-issues) (get-closed-issues)))
+(defn get-all-issues [] 
+  (concat (get-open-issues) (get-closed-issues)))
 
 (defn comments-for [issue]
-  (issues/issue-comments ghuser ghproject (:number issue) {:auth auth}))
+  (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*}))
 
 (defn assoc-comments [issue]
   (assoc issue :comment-contents (comments-for issue)))
@@ -65,7 +73,7 @@
 
 ;; Export to JIRA
 
-(def columns 
+(defn columns [] 
   (concat
     ["Issue Id",
      "Summary",
@@ -76,7 +84,7 @@
      "Milestone",
      "Status",
      "Reporter"]
-    (repeat MAXCMT "Comments") ))
+    (repeat *maxcmt* "Comments") ))
 
 ; Date-time format used by the Github Issues API
 (def gh-formatter (tf/formatters :date-time-no-ms))
@@ -91,7 +99,7 @@
 
 (defn get-user [issue]
   (let [u (:login (:user issue))]
-    (get user-map u u)))
+    (get *user-map* u u)))
 
 (defn format-comment [c]
   (let [created-at (tf/parse gh-formatter (:created_at c))]
@@ -105,7 +113,7 @@
          )))
 
 (defn issue2row [issue]
-  (let [comments (take MAXCMT (:comment-contents issue))]
+  (let [comments (take *maxcmt* (:comment-contents issue))]
     (concat
       (vector
         (:number issue) 
@@ -118,21 +126,41 @@
         (if (= "closed" (:state issue)) "Closed" "Open")
         (get-user issue) )
       (map format-comment comments)
-      (repeat (- MAXCMT (count comments)) "")    ; pad out field count  
+      (repeat (- *maxcmt* (count comments)) "")    ; pad out field count  
     )))
 
 (defn export-issues-to-file [issues filename]
   (let [issues-in-order (sort-by :number issues)]
     (with-open [out-file (io/writer filename)]
       (csv/write-csv 
-        out-file 
+        out-file
         (concat
-          [columns] 
+          [(columns)] 
           (map issue2row issues-in-order))))))
 
 ;; Main
 
+(defn print-usage []
+  (println "Usage: lein2 run project_id")
+  (println "project_id should correspond to a config file, e.g. 'my-project' for 'config-my-project.clj'")) 
+
+(defn load-config [config-id]
+  (with-open [r (io/reader (str "config-" config-id ".clj"))]
+    (read (java.io.PushbackReader. r))))
+
 (defn -main [& args]
-  (let [issues (add-comments (get-all-issues))]
-    (warn-missing-issues issues)
-    (export-issues-to-file issues "JIRA.csv")))
+  (when (empty? args)
+    (print-usage)
+    (System/exit 1))
+  (let [config-id (first args)
+        config (load-config config-id)]
+    (binding [
+            *config-id* config-id
+            *ghuser* (:ghuser config)
+            *ghproject* (:ghproject config)
+            *auth* (:auth config)
+            *maxcmt* (:maxcmt config)
+            *user-map* (:user-map config)]
+    (let [issues (add-comments (get-all-issues))]
+      (warn-missing-issues issues)
+      (export-issues-to-file issues (str "JIRA-" *config-id* ".csv"))))))

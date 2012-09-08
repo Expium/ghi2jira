@@ -34,11 +34,11 @@ Navigate to its directory in your command prompt.
 
 Use "lein deps" to download the dependencies. Leiningen will download all of the various JAR files needed, including Clojure itself.
 
-Edit config.clj with your project settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics.
+Copy config.clj to config-project_id.clj and update it with your settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics.
 
-Run the ghijira code, using Leiningen: "lein run". This will take a while, depending on the number of issues in your project, because the Github Issues API requires a separate requires for each Issue to download its comments.
+Run the ghijira code, using Leiningen: "lein run project_id". This will take a while, depending on the number of issues in your project, because the Github Issues API requires a separate requires for each Issue to download its comments.
 
-Import the resulting JIRA.csv file into JIRA. To get this right, you need to use a JIRA import configuration file. This ghijira project includes an example. Of particular importance is the comment setting, required for comment import to work. To clarify, this JIRA import configuration file is *not* part of the Clojure code, rather it is something JIRA needs.
+Import the resulting JIRA-project_id.csv file into JIRA. To get this right, you need to use a JIRA import configuration file. This ghijira project includes an example. Of particular importance is the comment setting, required for comment import to work. To clarify, this JIRA import configuration file is *not* part of the Clojure code, rather it is something JIRA needs.
 
 Information about such a file is linked in the blog post mentioned earlier.
 
