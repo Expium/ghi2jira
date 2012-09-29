@@ -109,7 +109,7 @@
   (let [u (:login (:user issue))]
     (get *user-map* u u)))
 
-(defn sci-replace
+(defn cross-item-ref-replace
   ""
   [comment project]
   (-> comment
@@ -118,13 +118,13 @@
 
 (defn format-comment [c]
   (let [created-at (tf/parse gh-formatter (:created_at c))
-        after-sci (sci-replace (:body c) *jira-project*)]
+        comment-text (cross-item-ref-replace (:body c) *jira-project*)]
     (str "Comment:"
          (get-user c)
          ":"
          (tf/unparse jira-formatter created-at)
          ":" \newline \newline
-         after-sci)))
+         comment-text)))
 
 (defn get-labels
   [issue]
