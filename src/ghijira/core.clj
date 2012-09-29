@@ -24,6 +24,7 @@
 (def ^:dynamic *auth*)
 (def ^:dynamic *maxcmt*)
 (def ^:dynamic *user-map*)
+(def ^:dynamic *jira-project*)
 
 ; Use the all-pages mechanism in tentacles to retrieve a complete list
 ; of issues. I found that several of the GH export scripts on the web
@@ -101,16 +102,22 @@
   (let [u (:login (:user issue))]
     (get *user-map* u u)))
 
+(defn sci-replace
+  ""
+  [comment project]
+  (-> comment
+    (str/replace #"#(\d+)\b" (str project "-" "$1"))
+    (str/replace \# \_ ))) ; Drop #, JIRA does not like.
+
 (defn format-comment [c]
-  (let [created-at (tf/parse gh-formatter (:created_at c))]
+  (let [created-at (tf/parse gh-formatter (:created_at c))
+        after-sci (sci-replace (:body c) *jira-project*)]
     (str "Comment:"
          (get-user c)
          ":"
          (tf/unparse jira-formatter created-at)
          ":" \newline \newline
-         ; JIRA thinks # means a comment in the CSV file, so drop those.
-         (str/replace (:body c) \# \_ )
-         )))
+         after-sci)))
 
 (defn issue2row [issue]
   (let [comments (take *maxcmt* (:comment-contents issue))]
@@ -160,7 +167,9 @@
             *ghproject* (:ghproject config)
             *auth* (:auth config)
             *maxcmt* (:maxcmt config)
-            *user-map* (:user-map config)]
+            *user-map* (:user-map config)
+            *jira-project* (:jira-project config)
+            ]
     (let [issues (add-comments (get-all-issues))]
       (warn-missing-issues issues)
       (export-issues-to-file issues (str "JIRA-" *config-id* ".csv"))))))

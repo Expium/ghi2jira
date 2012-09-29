@@ -10,6 +10,10 @@
 
  ; Maximum number of comments per issue
  :maxcmt 25
+ 
+ ; JIRA project setting - will be used to convert #123 to ABC-123
+ ; so that source control integration still works.
+ :jira-project "ABC"
 
  ; Translate user names from 
  :user-map
