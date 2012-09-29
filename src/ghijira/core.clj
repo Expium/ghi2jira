@@ -14,7 +14,8 @@
             [clojure.java.io :as io]
             [tentacles.issues :as issues]
             [clj-time.core :as time]
-            [clj-time.format :as tf] ))
+            [clj-time.format :as tf]
+            [clojure.core.memoize :as memoize] ))
 
 (def UNNAMED "UNNAMED")
 
@@ -47,13 +48,19 @@
   (concat (get-open-issues) (get-closed-issues)))
 
 (defn comments-for [issue]
+  ; This takes a long time on a big project; messages to show it is alive are nice.
+  (println (str "Fetching comments for #" (:number issue)))
   (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*}))
 
 (defn assoc-comments [issue]
   (assoc issue :comment-contents (comments-for issue)))
 
-(defn add-comments [issues]
-  (map assoc-comments issues))
+(defn issues-with-comments []
+  (map assoc-comments (get-all-issues)))
+
+; Cache for 20 minutes, for easier development at the REPL
+
+(def issues-with-comments-cached (memoize/memo-ttl issues-with-comments (* 20 60 1000)))
 
 ;; Validation / preprocessing
 
@@ -84,7 +91,8 @@
      "Issue type",
      "Milestone",
      "Status",
-     "Reporter"]
+     "Reporter",
+     "Labels"]
     (repeat *maxcmt* "Comments") ))
 
 ; Date-time format used by the Github Issues API
@@ -119,6 +127,12 @@
          ":" \newline \newline
          after-sci)))
 
+(defn get-labels
+  [issue]
+  (let [labels (map :name (:labels issue))
+        with-dashes (map #(str/replace %1 \space \-) labels)]
+    (str/join " " with-dashes)))
+
 (defn issue2row [issue]
   (let [comments (take *maxcmt* (:comment-contents issue))]
     (concat
@@ -131,7 +145,8 @@
         "Task" ; issue type
         (:title (:milestone issue))
         (if (= "closed" (:state issue)) "Closed" "Open")
-        (get-user issue) )
+        (get-user issue)
+        (get-labels issue))
       (map format-comment comments)
       (repeat (- *maxcmt* (count comments)) "")    ; pad out field count  
     )))
@@ -170,6 +185,6 @@
             *user-map* (:user-map config)
             *jira-project* (:jira-project config)
             ]
-    (let [issues (add-comments (get-all-issues))]
+    (let [issues (issues-with-comments-cached)]
       (warn-missing-issues issues)
       (export-issues-to-file issues (str "JIRA-" *config-id* ".csv"))))))
