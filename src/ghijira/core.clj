@@ -58,9 +58,8 @@
 (defn issues-with-comments []
   (map assoc-comments (get-all-issues)))
 
-; Cache for 20 minutes, for easier development at the REPL
-
-(def issues-with-comments-cached (memoize/memo-ttl issues-with-comments (* 20 60 1000)))
+; Cache for 30 minutes, for easier development at the REPL
+(def issues-with-comments-cached (memoize/memo-ttl issues-with-comments (* 30 60 1000)))
 
 ;; Validation / preprocessing
 
@@ -134,7 +133,9 @@
     (str/join " " with-dashes)))
 
 (defn issue2row [issue]
-  (let [comments (take *maxcmt* (:comment-contents issue))]
+  (let [comments (take *maxcmt* (:comment-contents issue))
+        milestone (:title (:milestone issue))
+        milestone-dashes (str/replace (or milestone "") \space \-)]
     (concat
       (vector
         (:number issue) 
@@ -143,7 +144,7 @@
         (gh2jira (:created_at issue))
         (gh2jira (:updated_at issue))
         "Task" ; issue type
-        (:title (:milestone issue))
+        milestone-dashes
         (if (= "closed" (:state issue)) "Closed" "Open")
         (get-user issue)
         (get-labels issue))
