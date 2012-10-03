@@ -119,7 +119,8 @@
   (cond
     (= (:event c) "referenced") (str "Referenced in commit:\n"
                                      *git-base-url*
-                                     (:commit_id c))
+                                     (:commit_id c)
+                                     "\n")
     (:event c) (str (:event c))
     :else  (cross-item-ref-replace (:body c) *jira-project*)))
 
@@ -141,7 +142,7 @@
 
 ; :number 52 is a good one, lots of comments
 ; (def x (first (filter #(= (:number %) 52) (issues-with-extra-cached))))
-;(map (juxt :created_at (comp :login :actor) :event) (:event-contents x))
+;(map (juxt :created_at (comp :login :actor) :event :commit_id) (:event-contents x))
 
 
 (defn issue2row [issue]
