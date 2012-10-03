@@ -26,6 +26,7 @@
 (def ^:dynamic *maxcmt*)
 (def ^:dynamic *user-map*)
 (def ^:dynamic *jira-project*)
+(def ^:dynamic *git-base-url*)
 
 ; Use the all-pages mechanism in tentacles to retrieve a complete list
 ; of issues. I found that several of the GH export scripts on the web
@@ -40,26 +41,21 @@
 (defn get-issues [state]
   (issues/issues *ghuser* *ghproject* {:auth *auth* :all-pages true :state state}))
 
-(defn get-open-issues [] (get-issues "open"))
-
-(defn get-closed-issues [] (get-issues "closed"))
-
 (defn get-all-issues [] 
-  (concat (get-open-issues) (get-closed-issues)))
+  (concat (get-issues "open")
+          (get-issues "closed")))
 
-(defn comments-for [issue]
-  ; This takes a long time on a big project; messages to show it is alive are nice.
-  (println (str "Fetching comments for #" (:number issue)))
-  (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*}))
+(defn assoc-comments-and-events [issue]
+  (println (str "Fetching data for #" (:number issue)))
+  (assoc issue 
+         :comment-contents (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*})
+         :event-contents (issues/issue-events *ghuser* *ghproject* (:number issue) {:auth *auth*})))
 
-(defn assoc-comments [issue]
-  (assoc issue :comment-contents (comments-for issue)))
-
-(defn issues-with-comments []
-  (map assoc-comments (get-all-issues)))
+(defn issues-with-extra []
+  (map assoc-comments-and-events (get-all-issues)))
 
 ; Cache for 30 minutes, for easier development at the REPL
-(def issues-with-comments-cached (memoize/memo-ttl issues-with-comments (* 30 60 1000)))
+(def issues-with-extra-cached (memoize/memo-ttl issues-with-extra (* 30 60 1000)))
 
 ;; Validation / preprocessing
 
@@ -90,6 +86,7 @@
      "Issue type",
      "Milestone",
      "Status",
+     "Resolution",
      "Reporter",
      "Labels"]
     (repeat *maxcmt* "Comments") ))
@@ -106,7 +103,8 @@
   (tf/unparse jira-formatter (tf/parse gh-formatter date)))
 
 (defn get-user [issue]
-  (let [u (:login (:user issue))]
+  (let [u (or (:login (:user issue))
+              (:login (:actor issue)))]
     (get *user-map* u u)))
 
 (defn cross-item-ref-replace
@@ -116,9 +114,18 @@
     (str/replace #"#(\d+)\b" (str project "-" "$1"))
     (str/replace \# \_ ))) ; Drop #, JIRA does not like.
 
+(defn comment-or-event-to-text
+  [c]
+  (cond
+    (= (:event c) "referenced") (str "Referenced in commit:\n"
+                                     *git-base-url*
+                                     (:commit_id c))
+    (:event c) (str (:event c))
+    :else  (cross-item-ref-replace (:body c) *jira-project*)))
+
 (defn format-comment [c]
   (let [created-at (tf/parse gh-formatter (:created_at c))
-        comment-text (cross-item-ref-replace (:body c) *jira-project*)]
+        comment-text (comment-or-event-to-text c)]
     (str "Comment:"
          (get-user c)
          ":"
@@ -132,8 +139,17 @@
         with-dashes (map #(str/replace %1 \space \-) labels)]
     (str/join " " with-dashes)))
 
+; :number 52 is a good one, lots of comments
+; (def x (first (filter #(= (:number %) 52) (issues-with-extra-cached))))
+;(map (juxt :created_at (comp :login :actor) :event) (:event-contents x))
+
+
 (defn issue2row [issue]
-  (let [comments (take *maxcmt* (:comment-contents issue))
+  (let [filtered-events (remove #(= "subscribed" (:event %)) (:event-contents issue))
+        all-comments (concat (:comment-contents issue)
+                             filtered-events)
+        trimmed-comments (take *maxcmt* 
+                               (sort-by :created_at all-comments))
         milestone (:title (:milestone issue))
         milestone-dashes (str/replace (or milestone "") \space \-)]
     (concat
@@ -146,10 +162,11 @@
         "Task" ; issue type
         milestone-dashes
         (if (= "closed" (:state issue)) "Closed" "Open")
+        (if (= "closed" (:state issue)) "Fixed" "Unresolved")
         (get-user issue)
         (get-labels issue))
-      (map format-comment comments)
-      (repeat (- *maxcmt* (count comments)) "")    ; pad out field count  
+      (map format-comment trimmed-comments)
+      (repeat (- *maxcmt* (count trimmed-comments)) "")    ; pad out field count  
     )))
 
 (defn export-issues-to-file [issues filename]
@@ -171,12 +188,10 @@
   (with-open [r (io/reader (str "config-" config-id ".clj"))]
     (read (java.io.PushbackReader. r))))
 
-(defn -main [& args]
-  (when (empty? args)
-    (print-usage)
-    (System/exit 1))
-  (let [config-id (first args)
-        config (load-config config-id)]
+(defn process
+  "main program"
+  [config-id]
+    (let [config (load-config config-id)]
     (binding [
             *config-id* config-id
             *ghuser* (:ghuser config)
@@ -185,7 +200,15 @@
             *maxcmt* (:maxcmt config)
             *user-map* (:user-map config)
             *jira-project* (:jira-project config)
+            *git-base-url* (:git-base-url config)
             ]
-    (let [issues (issues-with-comments-cached)]
+    (let [issues (issues-with-extra-cached)]
       (warn-missing-issues issues)
       (export-issues-to-file issues (str "JIRA-" *config-id* ".csv"))))))
+
+(defn -main [& args]
+  (when (empty? args)
+    (print-usage)
+    (System/exit 1))
+  (process (first args)))
+

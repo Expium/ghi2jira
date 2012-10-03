@@ -15,6 +15,10 @@
  ; so that source control integration still works.
  :jira-project "ABC"
 
+ ; Git base URL - used to translate GHI "referenced" events to
+ ; comments with a URL pointing to the link.
+ :git-base-url "https://bitbucket.org/somenamehere/someprojectthere/changeset/"
+ 
  ; Translate user names from 
  :user-map
  { "GithubUserName1" "JIRAUserName1"
