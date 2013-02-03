@@ -10,6 +10,7 @@
   "date.import.format" : "MM/dd/yy hh:mm:ss a",
   "field.Description" : "description",
   "date.fields" : "Date Created",
+  "field.Assignee" : "assignee",
   "field.Reporter" : "reporter",
   "project.name" : "YOUR PROJECT NAME HERE",
   "project.key" : "PROJ-KEY",
