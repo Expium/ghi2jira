@@ -88,6 +88,7 @@
      "Status",
      "Resolution",
      "Reporter",
+     "Assignee",
      "Labels"]
     (repeat *maxcmt* "Comments") ))
 
@@ -105,6 +106,10 @@
 (defn get-user [issue]
   (let [u (or (:login (:user issue))
               (:login (:actor issue)))]
+    (get *user-map* u u)))
+
+(defn get-assignee [issue]
+  (let [u (:login (:assignee issue))]
     (get *user-map* u u)))
 
 (defn cross-item-ref-replace
@@ -165,6 +170,7 @@
         (if (= "closed" (:state issue)) "Closed" "Open")
         (if (= "closed" (:state issue)) "Fixed" "Unresolved")
         (get-user issue)
+        (get-assignee issue)
         (get-labels issue))
       (map format-comment trimmed-comments)
       (repeat (- *maxcmt* (count trimmed-comments)) "")    ; pad out field count  
