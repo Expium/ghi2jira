@@ -34,7 +34,7 @@ Navigate to its directory in your command prompt.
 
 Use "lein deps" to download the dependencies. Leiningen will download all of the various JAR files needed, including Clojure itself.
 
-Copy config.clj to config-project_id.clj and update it with your settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics.
+Copy config.clj to config-project_id.clj and update it with your settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics. Note that Github may require the project name in all lower case.
 
 Run the ghijira code, using Leiningen: "lein run project_id". This will take a while, depending on the number of issues in your project, because the Github Issues API requires a separate requires for each Issue to download its comments.
 
