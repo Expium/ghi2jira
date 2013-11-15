@@ -1,6 +1,6 @@
 ; Export GitHub Issues to JIRA-compatible CSV format
 
-; Copyright 2012 Kyle Cordes
+; Copyright 2012-2013 Kyle Cordes
 ; http://kylecordes.com/
 
 ; Hereby released under the Eclipse Public License 1.0,
@@ -39,7 +39,10 @@
 ;; Loading issues from GH
 
 (defn get-issues [state]
-  (issues/issues *ghuser* *ghproject* {:auth *auth* :all-pages true :state state}))
+  (let [x (issues/issues *ghuser* *ghproject* {:auth *auth* :all-pages true :state state})]
+    (if (= (:status x) 404)
+      (throw (Exception. "Error from GitHub. API returned 404, repo owner, name, or auth is wrong")))
+    x))
 
 (defn get-all-issues [] 
   (concat (get-issues "open")
@@ -52,10 +55,15 @@
          :event-contents (issues/issue-events *ghuser* *ghproject* (:number issue) {:auth *auth*})))
 
 (defn issues-with-extra []
-  (map assoc-comments-and-events (get-all-issues)))
+  (let [iss (get-all-issues)]
+    (println "Issues found: " (count iss))
+    (if (> (count iss) 0)
+      (map assoc-comments-and-events iss)
+      (throw (Exception. "No issues found, this usually means the repo owner or name is wrong.")))))
 
-; Cache for 30 minutes, for easier development at the REPL
-(def issues-with-extra-cached (memoize/memo-ttl issues-with-extra (* 30 60 1000)))
+; Cache for 15 minutes, for easier development at the REPL
+(def issues-with-extra-cached
+  (memoize/ttl issues-with-extra :ttl/threshold (* 15 60 1000)))
 
 ;; Validation / preprocessing
 
@@ -69,7 +77,8 @@
   (let [missing-issues (find-missing-issues issues)]
     (when-not (empty? missing-issues)
       (println)
-      (println "WARNING: Some issues are missing from the set. This will result in inconsistent numeration between JIRA and Github.")
+      (println "WARNING: Some issues are missing from the set. This will result in inconsistent numbering between JIRA and Github.")
+      (println "This could be fixed by adding a feature to insert 'stubs' items.")
       (println)
       (println "The missing issues are:" (str/join ", " missing-issues))
       (println))))
@@ -209,7 +218,8 @@
             *jira-project* (:jira-project config)
             *git-base-url* (:git-base-url config)
             ]
-    (let [issues (issues-with-extra-cached)]
+    ; change to issues-with-extra-cached for faster development
+    (let [issues (issues-with-extra)]
       (warn-missing-issues issues)
       (export-issues-to-file issues (str "JIRA-" *config-id* ".csv"))))))
 
