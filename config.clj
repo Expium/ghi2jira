@@ -17,6 +17,11 @@
  ; so that source control integration still works.
  :jira-project "ABC"
 
+ ; The issue offset is used when you need to import to an existing JIRA project,
+ ; it is added to the Github issue number. Use 0 if you are starting with an
+ ; empty JIRA project.
+ :issue-offset 0
+
  ; Git base URL - used to translate GHI "referenced" events to
  ; comments with a URL pointing to the link.
  :git-base-url "https://bitbucket.org/somenamehere/someprojectthere/changeset/"

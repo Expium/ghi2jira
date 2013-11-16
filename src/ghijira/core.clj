@@ -27,6 +27,7 @@
 (def ^:dynamic *user-map*)
 (def ^:dynamic *jira-project*)
 (def ^:dynamic *git-base-url*)
+(def ^:dynamic *issue-offset*)
 
 ; Use the all-pages mechanism in tentacles to retrieve a complete list
 ; of issues. I found that several of the GH export scripts on the web
@@ -34,7 +35,7 @@
 ; but very small projects.
 
 ; To test quickly with a smaller number of issues, change :all-pages true to
-; :per-page 20 
+; :per-page 20
 
 ;; Loading issues from GH
 
@@ -44,13 +45,13 @@
       (throw (Exception. "Error from GitHub. API returned 404, repo owner, name, or auth is wrong")))
     x))
 
-(defn get-all-issues [] 
+(defn get-all-issues []
   (concat (get-issues "open")
           (get-issues "closed")))
 
 (defn assoc-comments-and-events [issue]
   (println (str "Fetching data for #" (:number issue)))
-  (assoc issue 
+  (assoc issue
          :comment-contents (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*})
          :event-contents (issues/issue-events *ghuser* *ghproject* (:number issue) {:auth *auth*})))
 
@@ -85,7 +86,7 @@
 
 ;; Export to JIRA
 
-(defn columns [] 
+(defn columns []
   (concat
     ["Issue Id",
      "Summary",
@@ -106,7 +107,7 @@
 
 ; For most date fields, JIRA can handle anything in SimpleDateFormat
 ; can be anything for SimpleDateFormat. For comment dates, JIRA requires
-; this specific format only. 
+; this specific format only.
 (def jira-formatter (tf/formatter "MM/dd/yy hh:mm:ss a"))
 
 (defn gh2jira [date]
@@ -123,10 +124,14 @@
 
 (defn cross-item-ref-replace
   ""
-  [comment project]
+  [comment project issue-offset]
   (-> comment
-    (str/replace #"#(\d+)\b" (str project "-" "$1"))
-    (str/replace \# \_ ))) ; Drop #, JIRA does not like.
+    (str/replace #"#(\d+)\b"
+                 #(str project "-" (+ issue-offset (bigdec (second %1)))))
+    (str/replace \#
+                 \_ ))) ; Drop #, JIRA does not like.
+
+;(cross-item-ref-replace "Test that mentions #14 here" "ABC" 150)
 
 (defn comment-or-event-to-text
   [c]
@@ -136,7 +141,8 @@
                                      (:commit_id c)
                                      "\n")
     (:event c) (str (:event c))
-    :else  (cross-item-ref-replace (:body c) *jira-project*)))
+    :else  (cross-item-ref-replace
+            (:body c) *jira-project* *issue-offset*)))
 
 (defn format-comment [c]
   (let [created-at (tf/parse gh-formatter (:created_at c))
@@ -163,15 +169,15 @@
   (let [filtered-events (remove #(= "subscribed" (:event %)) (:event-contents issue))
         all-comments (concat (:comment-contents issue)
                              filtered-events)
-        trimmed-comments (take *maxcmt* 
+        trimmed-comments (take *maxcmt*
                                (sort-by :created_at all-comments))
         milestone (:title (:milestone issue))
         milestone-dashes (str/replace (or milestone "") \space \-)]
     (concat
       (vector
-        (:number issue) 
+        (+ *issue-offset* (:number issue))
         (:title issue)
-        (:body issue)
+        (cross-item-ref-replace (:body issue) *jira-project* *issue-offset*)
         (gh2jira (:created_at issue))
         (gh2jira (:updated_at issue))
         "Task" ; issue type
@@ -182,23 +188,23 @@
         (get-assignee issue)
         (get-labels issue))
       (map format-comment trimmed-comments)
-      (repeat (- *maxcmt* (count trimmed-comments)) "")    ; pad out field count  
+      (repeat (- *maxcmt* (count trimmed-comments)) "")    ; pad out field count
     )))
 
 (defn export-issues-to-file [issues filename]
   (let [issues-in-order (sort-by :number issues)]
     (with-open [out-file (io/writer filename)]
-      (csv/write-csv 
+      (csv/write-csv
         out-file
         (concat
-          [(columns)] 
+          [(columns)]
           (map issue2row issues-in-order))))))
 
 ;; Main
 
 (defn print-usage []
   (println "Usage: lein2 run project_id")
-  (println "project_id should correspond to a config file, e.g. 'my-project' for 'config-my-project.clj'")) 
+  (println "project_id should correspond to a config file, e.g. 'my-project' for 'config-my-project.clj'"))
 
 (defn load-config [config-id]
   (with-open [r (io/reader (str "config-" config-id ".clj"))]
@@ -216,6 +222,7 @@
             *maxcmt* (:maxcmt config)
             *user-map* (:user-map config)
             *jira-project* (:jira-project config)
+            *issue-offset* (:issue-offset config)
             *git-base-url* (:git-base-url config)
             ]
     ; change to issues-with-extra-cached for faster development
@@ -229,3 +236,5 @@
     (System/exit 1))
   (process (first args)))
 
+; To test from the REPL:
+; (process "1")
