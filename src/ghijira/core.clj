@@ -52,8 +52,8 @@
 (defn assoc-comments-and-events [issue]
   (println (str "Fetching data for #" (:number issue)))
   (assoc issue
-         :comment-contents (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*})
-         :event-contents (issues/issue-events *ghuser* *ghproject* (:number issue) {:auth *auth*})))
+    :comment-contents (issues/issue-comments *ghuser* *ghproject* (:number issue) {:auth *auth*})
+    :event-contents (issues/issue-events *ghuser* *ghproject* (:number issue) {:auth *auth*})))
 
 (defn issues-with-extra []
   (let [iss (get-all-issues)]

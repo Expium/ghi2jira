@@ -12,3 +12,5 @@ JIRA.csv
 *history*
 /target
 config-*.clj
+.nrepl-port
+
