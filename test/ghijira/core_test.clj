@@ -7,7 +7,7 @@
     (is (= [2] (find-missing-issues issues)))))
 
 (deftest should-identify-missing-issues-from-number-1
-  (let [issues [{:number 3 :title "Third"} ]]
+  (let [issues [{:number 3 :title "Third"}]]
     (is (= [1 2] (find-missing-issues issues)))))
 
 ;; End-to-end test
@@ -45,6 +45,7 @@
                 :user "anne"
                 :comment-contents []}
         issues [issue3 issue1 issue2]] ; random order
-    (binding [*maxcmt* 25]
+    (binding [*maxcmt* 25
+              *issue-offset* 0]
       (export-issues-to-file issues "testdata/temp/out.csv")
       (is (= (slurp "testdata/expected_jira.csv") (slurp"testdata/temp/out.csv"))))))

@@ -13,4 +13,4 @@ JIRA.csv
 /target
 config-*.clj
 .nrepl-port
-
+testdata/temp/*
