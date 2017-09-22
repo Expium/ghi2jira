@@ -3,12 +3,26 @@
 This software communicates with Github's v3 API, to export
 the "Issues" from a project in to a format JIRA can import.
 
-The source is set up for both leiningen and Eclipse, as I sometimes
-use the latter.
+The software is written in Clojure, and is primarily intended for
+use by people comfortable running a Clojure program, but some users
+have gotten good results without any Clojure knowledge.
 
-Note that comment import is broken in JIRA import 4.1.4, and works
-correctly starting with JIRA import 4.2.  As of June 2012, unfortunately
-the version deployed in JIRA OnDemand is 4.1.4.
+## 2017 Status Update
+
+Although much of this code was written several years ago and unchanged
+since, updates provided by contributors have kept the software able to
+run and produce good results with current 2017 versions of Jira and
+Clojure. Users are encouraged to give it a try.
+
+## Technical and version details
+
+The source is set up for both leiningen and Eclipse, as I sometimes
+use the latter. If you're simply running the software, Leiningen
+is easy to set up as described below.
+
+Note that comment import was broken in JIRA import 4.1.4, and worked
+correctly starting with JIRA import 4.2.  It is since been updated
+to work with versions as high as Jira 7.
 
 For background information, see the announcement blog post:
 
@@ -16,23 +30,32 @@ http://kylecordes.com/2012/github-issues-export-jira
 
 ## Usage
 
-I expect some users of this tool to start without Clojure knowledge (i.e. just want to export JIRA data, not learn Clojure), so here are hopefully sufficient instructions for that.
+I expect some users of this tool to start without Clojure knowledge
+(i.e. just want to export JIRA data, not learn Clojure), so her
+are hopefully sufficient instructions for that.
+
+### Java
 
 Install Java.
 
-You don't need to install Clojure - Leiningen will do that for you.
+### Clojure
+
+You **don't** need to install Clojure - Leiningen will do that for you.
+
+### Leiningen
 
 Install Leiningen:
 
 https://github.com/technomancy/leiningen/
 
-Either the new 2.x version, or old 1.x version, should work. (Typically you just download the lein script, and put it in your ~/bin directory.)
+### This software, ghi2jira
 
-Download ghijira (this software), either with "git clone" or by downloading a ZIP from Github.
+Download ghi2jira (this software), either with "git clone" or by downloading a ZIP from Github.
 
 Navigate to its directory in your command prompt.
 
-Use "lein deps" to download the dependencies. Leiningen will download all of the various JAR files needed, including Clojure itself.
+Use "lein deps" to download the dependencies. Leiningen will download
+all of the various JAR files needed, including Clojure itself.
 
 Copy config.clj to config-project_id.clj and update it with your settings. This is a Clojure file, but you should be able to follow the syntax enough to fill in your project specifics. Note that Github may require the project name in all lower case.
 
@@ -44,6 +67,6 @@ Information about such a file is linked in the blog post mentioned earlier.
 
 ## License
 
-Copyright (C) 2012 Kyle Cordes
+Copyright (C) 2012-2017 Kyle Cordes / Expium LLC
 
 Distributed under the Eclipse Public License, the same as Clojure.
