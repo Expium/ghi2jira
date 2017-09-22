@@ -30,4 +30,8 @@
  :user-map
  { "GithubUserName1" "JIRAUserName1"
   "GithubUserName2" "JIRAUserName2"}
+
+ ; Ignore mentions of these names (to avoid spurious comments that cannot be attributed).
+ ; An example of this is when there are JSON snippets using @-attributes.
+ :ignore-mentions #{"timestamp" "host" "Version"}
 }

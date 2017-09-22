@@ -25,6 +25,7 @@
 (def ^:dynamic *auth*)
 (def ^:dynamic *maxcmt*)
 (def ^:dynamic *user-map*)
+(def ^:dynamic *ignore-mentions*)
 (def ^:dynamic *jira-project*)
 (def ^:dynamic *git-base-url*)
 (def ^:dynamic *issue-offset*)
@@ -118,6 +119,17 @@
               (:login (:actor issue)))]
     (get *user-map* u u)))
 
+(defn bad-mention? [comment]
+  (if (get *ignore-mentions* (get-user comment))
+    true
+    false))
+
+(defn get-comment-author [comment]
+  (let [u (get-user comment)]
+    (if-not (get *ignore-mentions* u)
+      (str u ";")
+      "")))
+
 (defn get-assignee [issue]
   (let [u (:login (:assignee issue))]
     (get *user-map* u u)))
@@ -140,6 +152,12 @@
                                      *git-base-url*
                                      (:commit_id c)
                                      "\n")
+    (= (:event c) "merged")       (str "Merged this pull request")
+    (= (:event c) "labeled")      (str "Added the '"   (:name (:label c)) "' label")
+    (= (:event c) "unlabeled")    (str "Removed the '" (:name (:label c)) "' label")
+    (= (:event c) "milestoned")   (str "Added the '"   (:title (:milestone c)) "' milestone")
+    (= (:event c) "demilestoned") (str "Removed the '" (:title (:milestone c)) "' milestone")
+    (= (:event c) "renamed")      (str "Renamed this issue from '" (:from (:rename c)) "' to '" (:to (:rename c)) "'")
     (:event c) (str (:event c))
     :else  (cross-item-ref-replace
             (:body c) *jira-project* *issue-offset*)))
@@ -147,12 +165,15 @@
 (defn format-comment [c]
   (let [created-at (tf/parse gh-formatter (:created_at c))
         comment-text (comment-or-event-to-text c)]
-    (str "Comment:"
-         (get-user c)
-         ":"
-         (tf/unparse jira-formatter created-at)
-         ":" \newline \newline
+    (str (tf/unparse jira-formatter created-at)
+         ";"
+         (get-comment-author c)
          comment-text)))
+
+(defn format-title [issue]
+  (if (:pull_request issue)
+    (str "(PR #" (:number issue) ") " (:title issue))
+    (:title issue)))
 
 (defn get-labels
   [issue]
@@ -165,18 +186,23 @@
 ;(map (juxt :created_at (comp :login :actor) :event :commit_id) (:event-contents x))
 
 
+(defn filter-events [event-contents]
+  (let [bad-events #{"subscribed" "head_ref_deleted" "head_ref_restored" "locked" "unlocked"}]
+    (remove #(contains? bad-events (:event %)) event-contents)))
+
 (defn issue2row [issue]
-  (let [filtered-events (remove #(= "subscribed" (:event %)) (:event-contents issue))
+  (let [filtered-events (filter-events (:event-contents issue))
         all-comments (concat (:comment-contents issue)
                              filtered-events)
+        allowed-comments (remove bad-mention? all-comments)
         trimmed-comments (take *maxcmt*
-                               (sort-by :created_at all-comments))
+                               (sort-by :created_at allowed-comments))
         milestone (:title (:milestone issue))
         milestone-dashes (str/replace (or milestone "") \space \-)]
     (concat
       (vector
         (+ *issue-offset* (:number issue))
-        (:title issue)
+        (format-title issue)
         (cross-item-ref-replace (:body issue) *jira-project* *issue-offset*)
         (gh2jira (:created_at issue))
         (gh2jira (:updated_at issue))
@@ -221,6 +247,7 @@
             *auth* (:auth config)
             *maxcmt* (:maxcmt config)
             *user-map* (:user-map config)
+            *ignore-mentions* (:ignore-mentions config)
             *jira-project* (:jira-project config)
             *issue-offset* (:issue-offset config)
             *git-base-url* (:git-base-url config)
