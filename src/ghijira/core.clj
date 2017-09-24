@@ -138,6 +138,7 @@
   ""
   [comment project issue-offset]
   (-> comment
+    (or "")
     (str/replace #"#(\d+)\b"
                  #(str project "-" (+ issue-offset (bigdec (second %1)))))
     (str/replace \#
